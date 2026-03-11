@@ -4,6 +4,18 @@ export default {
     icon: 'star',
     categories: ['content'],
   },
+  triggerEvents: [
+    {
+      name: 'testimonials:loaded',
+      label: { en: 'On Testimonials Loaded' },
+      event: { count: 0 },
+    },
+    {
+      name: 'testimonials:error',
+      label: { en: 'On Error' },
+      event: { message: '' },
+    },
+  ],
   properties: {
     supabaseUrl: {
       label: { en: 'Supabase URL' },

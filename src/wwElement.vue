@@ -46,10 +46,10 @@
         <!-- Footer -->
         <footer class="pt-card-footer">
           <div class="pt-reviewer">
-            <div class="pt-reviewer-avatar" aria-hidden="true">{{ reviewerInitial(review.member_name) }}</div>
+            <div class="pt-reviewer-avatar" aria-hidden="true">{{ reviewerInitial(review.reviewer_name) }}</div>
             <div class="pt-reviewer-info">
-              <span class="pt-reviewer-name">{{ review.member_name || 'Spread Member' }}</span>
-              <span class="pt-reviewer-meta">{{ review.category_name }} · {{ formatDate(review.created_at) }}</span>
+              <span class="pt-reviewer-name">{{ review.reviewer_name || 'Spread Member' }}</span>
+              <span class="pt-reviewer-meta">{{ review.category_name }} · {{ formatDate(review.published_at) }}</span>
             </div>
           </div>
         </footer>
@@ -91,7 +91,7 @@ export default {
   },
   emits: ['trigger-event'],
 
-  setup(props) {
+  setup(props, { emit }) {
     const supabaseUrl     = computed(() => props.content?.supabaseUrl || '');
     const supabaseAnonKey = computed(() => props.content?.supabaseAnonKey || '');
     const heading         = computed(() => props.content?.heading ?? 'What our members say');
@@ -109,8 +109,10 @@ export default {
         const client = createSpreadClient(supabaseUrl.value, supabaseAnonKey.value);
         const data = await client.rpc('get_published_reviews', { p_limit: limit.value });
         testimonials.value = Array.isArray(data) ? data : [];
-      } catch (_) {
+        emit('trigger-event', { name: 'testimonials:loaded', event: { count: testimonials.value.length } });
+      } catch (err) {
         testimonials.value = [];
+        emit('trigger-event', { name: 'testimonials:error', event: { message: err?.message || 'Failed to load testimonials.' } });
       } finally {
         loading.value = false;
       }
@@ -133,16 +135,16 @@ export default {
     // ── Editor mock ───────────────────────────────────────────────────────
     /* wwEditor:start */
     testimonials.value = [
-      { id: '1', member_name: 'Sarah M.', rating: 5, comment: 'Absolutely love the fresh produce. Everything arrived perfectly packed and the quality is unbeatable.', category_name: 'Product Quality', created_at: '2025-06-01T00:00:00Z' },
-      { id: '2', member_name: 'James P.', rating: 5, comment: 'Delivery is super fast and the box is always so well presented. Highly recommend!', category_name: 'Delivery', created_at: '2025-05-15T00:00:00Z' },
-      { id: '3', member_name: 'Priya L.', rating: 4, comment: 'Great selection and the locally-sourced options are a huge bonus. My family looks forward to every box.', category_name: 'Overall Experience', created_at: '2025-05-08T00:00:00Z' },
-      { id: '4', member_name: 'Daniel K.', rating: 5, comment: 'The farmers\' market feel at home. Nothing beats knowing exactly where your food comes from.', category_name: 'Product Quality', created_at: '2025-04-20T00:00:00Z' },
-      { id: '5', member_name: 'Emma R.', rating: 4, comment: 'Seamless experience from start to finish. Customer support was also very helpful when I had a query.', category_name: 'Overall Experience', created_at: '2025-04-10T00:00:00Z' },
-      { id: '6', member_name: 'Noah T.', rating: 5, comment: 'Freshest eggs I\'ve ever tasted. The seasonal produce keeps things exciting each week.', category_name: 'Product Quality', created_at: '2025-03-28T00:00:00Z' },
+      { id: '1', reviewer_name: 'Sarah M.', rating: 5, comment: 'Absolutely love the fresh produce. Everything arrived perfectly packed and the quality is unbeatable.', category_name: 'Product Quality', published_at: '2025-06-01T00:00:00Z' },
+      { id: '2', reviewer_name: 'James P.', rating: 5, comment: 'Delivery is super fast and the box is always so well presented. Highly recommend!', category_name: 'Delivery', published_at: '2025-05-15T00:00:00Z' },
+      { id: '3', reviewer_name: 'Priya L.', rating: 4, comment: 'Great selection and the locally-sourced options are a huge bonus. My family looks forward to every box.', category_name: 'Overall Experience', published_at: '2025-05-08T00:00:00Z' },
+      { id: '4', reviewer_name: 'Daniel K.', rating: 5, comment: 'The farmers\' market feel at home. Nothing beats knowing exactly where your food comes from.', category_name: 'Product Quality', published_at: '2025-04-20T00:00:00Z' },
+      { id: '5', reviewer_name: 'Emma R.', rating: 4, comment: 'Seamless experience from start to finish. Customer support was also very helpful when I had a query.', category_name: 'Overall Experience', published_at: '2025-04-10T00:00:00Z' },
+      { id: '6', reviewer_name: 'Noah T.', rating: 5, comment: 'Freshest eggs I\'ve ever tasted. The seasonal produce keeps things exciting each week.', category_name: 'Product Quality', published_at: '2025-03-28T00:00:00Z' },
     ];
     /* wwEditor:end */
 
-    return { heading, subheading, columns, testimonials, loading, reviewerInitial, formatDate };
+    return { heading, subheading, columns, testimonials, loading, reviewerInitial, formatDate, loadTestimonials };
   },
 };
 </script>
