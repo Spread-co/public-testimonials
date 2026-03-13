@@ -1,5 +1,5 @@
 <template>
-  <section class="pt-root">
+  <section v-if="!content.portalTarget || content.portalTarget === 'public'" class="pt-root">
 
     <!-- Section header -->
     <div v-if="heading || subheading" class="pt-header">

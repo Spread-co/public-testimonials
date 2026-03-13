@@ -61,6 +61,13 @@ export default {
       },
       defaultValue: '3',
     },
+    portalTarget: {
+      label: { en: 'Portal Target' },
+      type: 'Text',
+      bindable: true,
+      hidden: true,
+      defaultValue: '',
+    },
     /* wwEditor:start */
     bindingValidation: {
       limit:   { type: 'number', tooltip: 'Number of reviews to display (1-50)' },
