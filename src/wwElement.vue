@@ -341,6 +341,12 @@ export default {
 }
 
 /* ── Large desktop ─────────────────────────────────────────────────────── */
+@media (max-width: 479px) {
+  .pt-root { padding: 40px 16px; }
+}
+@media (min-width: 1280px) {
+  .pt-root { padding: 96px 72px; }
+}
 @media (min-width: 1440px) {
   .pt-root { max-width: 1280px; margin-inline: auto; }
 }
