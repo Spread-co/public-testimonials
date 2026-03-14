@@ -104,6 +104,7 @@
         class="pt-carousel-btn pt-carousel-btn--prev"
         @click="prevSlide"
         aria-label="Previous review"
+        data-tooltip="Previous review"
         :disabled="testimonials.length <= 1"
       >
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
@@ -112,6 +113,7 @@
         class="pt-carousel-btn pt-carousel-btn--next"
         @click="nextSlide"
         aria-label="Next review"
+        data-tooltip="Next review"
         :disabled="testimonials.length <= 1"
       >
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
@@ -128,6 +130,7 @@
           :aria-selected="i === currentIndex"
           role="tab"
           :aria-label="`Review ${i + 1}`"
+          :data-tooltip="`Review ${i + 1}`"
         ></button>
       </div>
     </div>
@@ -558,4 +561,45 @@ export default {
 @media (min-width: 1440px) {
   .pt-root { max-width: 1280px; margin-inline: auto; }
 }
+
+/* ── Tooltips ────────────────────────────────────────────────────────────── */
+[data-tooltip] { position: relative; }
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4b162d;
+  color: #e6d8ca;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 4px 10px;
+  border-radius: 4px;
+  max-width: 220px;
+  white-space: normal;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 200;
+}
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #4b162d;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 200;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after,
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before { opacity: 1; }
 </style>
