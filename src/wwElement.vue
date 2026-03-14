@@ -19,7 +19,7 @@
 
     <!-- Grid -->
     <div
-      v-else
+      v-if="!carouselMode"
       class="pt-grid"
       :style="{ '--pt-cols': columns }"
       aria-label="Customer reviews"
@@ -54,6 +54,82 @@
           </div>
         </footer>
       </article>
+    </div>
+
+    <!-- Carousel -->
+    <div
+      v-else
+      class="pt-carousel"
+      @mouseenter="pauseCarousel"
+      @mouseleave="resumeCarousel"
+      aria-label="Customer reviews carousel"
+    >
+      <div class="pt-carousel-viewport">
+        <div
+          class="pt-carousel-track"
+          :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+        >
+          <article
+            v-for="review in testimonials"
+            :key="review.id"
+            class="pt-carousel-slide"
+          >
+            <div class="pt-card">
+              <div class="pt-stars" :aria-label="`${review.rating} out of 5 stars`">
+                <span
+                  v-for="n in 5"
+                  :key="n"
+                  class="pt-star"
+                  :class="{ 'pt-star--on': n <= review.rating }"
+                  aria-hidden="true"
+                >★</span>
+              </div>
+              <p class="pt-comment" v-if="review.comment">"{{ review.comment }}"</p>
+              <footer class="pt-card-footer">
+                <div class="pt-reviewer">
+                  <div class="pt-reviewer-avatar" aria-hidden="true">{{ reviewerInitial(review.reviewer_name) }}</div>
+                  <div class="pt-reviewer-info">
+                    <span class="pt-reviewer-name">{{ review.reviewer_name || 'Spread Member' }}</span>
+                    <span class="pt-reviewer-meta">{{ review.category_name }} · {{ formatDate(review.published_at) }}</span>
+                  </div>
+                </div>
+              </footer>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- Prev / Next arrows -->
+      <button
+        class="pt-carousel-btn pt-carousel-btn--prev"
+        @click="prevSlide"
+        aria-label="Previous review"
+        :disabled="testimonials.length <= 1"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button
+        class="pt-carousel-btn pt-carousel-btn--next"
+        @click="nextSlide"
+        aria-label="Next review"
+        :disabled="testimonials.length <= 1"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Dot indicators -->
+      <div v-if="carouselShowDots && testimonials.length > 1" class="pt-dots" role="tablist" aria-label="Select review">
+        <button
+          v-for="(_, i) in testimonials"
+          :key="i"
+          class="pt-dot"
+          :class="{ 'pt-dot--active': i === currentIndex }"
+          @click="goToSlide(i)"
+          :aria-selected="i === currentIndex"
+          role="tab"
+          :aria-label="`Review ${i + 1}`"
+        ></button>
+      </div>
     </div>
 
   </section>
@@ -98,9 +174,44 @@ export default {
     const subheading      = computed(() => props.content?.subheading ?? '');
     const limit           = computed(() => props.content?.limit ?? 9);
     const columns         = computed(() => props.content?.columns ?? '3');
+    const carouselMode    = computed(() => props.content?.carouselMode === true || props.content?.carouselMode === 'true');
+    const autoPlayInterval = computed(() => Number(props.content?.autoPlayInterval) || 5000);
+    const carouselShowDots = computed(() => props.content?.carouselShowDots !== false);
 
     const testimonials    = ref([]);
     const loading         = ref(false);
+    const currentIndex    = ref(0);
+    let   _autoTimer      = null;
+    let   _paused         = false;
+
+    function startAutoPlay() {
+      stopAutoPlay();
+      if (!carouselMode.value || testimonials.value.length <= 1) return;
+      _autoTimer = setInterval(() => {
+        if (!_paused) nextSlide();
+      }, autoPlayInterval.value);
+    }
+
+    function stopAutoPlay() {
+      if (_autoTimer) { clearInterval(_autoTimer); _autoTimer = null; }
+    }
+
+    function pauseCarousel()  { _paused = true;  }
+    function resumeCarousel() { _paused = false; }
+
+    function nextSlide() {
+      if (!testimonials.value.length) return;
+      currentIndex.value = (currentIndex.value + 1) % testimonials.value.length;
+    }
+
+    function prevSlide() {
+      if (!testimonials.value.length) return;
+      currentIndex.value = (currentIndex.value - 1 + testimonials.value.length) % testimonials.value.length;
+    }
+
+    function goToSlide(i) {
+      currentIndex.value = i;
+    }
 
     async function loadTestimonials() {
       if (!supabaseUrl.value || !supabaseAnonKey.value) return;
@@ -130,7 +241,9 @@ export default {
       } catch (_) { return ''; }
     }
 
-    onMounted(loadTestimonials);
+    onMounted(() => {
+      loadTestimonials().then(() => startAutoPlay());
+    });
 
     // ── Editor mock ───────────────────────────────────────────────────────
     /* wwEditor:start */
@@ -144,7 +257,14 @@ export default {
     ];
     /* wwEditor:end */
 
-    return { heading, subheading, columns, testimonials, loading, reviewerInitial, formatDate, loadTestimonials };
+    return {
+      heading, subheading, columns,
+      carouselMode, carouselShowDots,
+      testimonials, loading,
+      currentIndex,
+      reviewerInitial, formatDate, loadTestimonials,
+      prevSlide, nextSlide, goToSlide, pauseCarousel, resumeCarousel,
+    };
   },
 };
 </script>
@@ -328,6 +448,94 @@ export default {
   padding: 40px 0;
   color: var(--pt-text-secondary);
   font-size: 15px;
+}
+
+/* ── Carousel ───────────────────────────────────────────────────────────── */
+.pt-carousel {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 52px;   /* room for dots */
+}
+
+.pt-carousel-viewport {
+  overflow: hidden;
+  border-radius: var(--pt-radius-md);
+}
+
+.pt-carousel-track {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.pt-carousel-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 0 4px;
+}
+
+@media (min-width: 768px) {
+  .pt-carousel-slide { padding: 0 8px; }
+}
+
+/* Prev / Next buttons */
+.pt-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) translateY(-26px);  /* shift up slightly above dots */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--pt-bg);
+  border: 1.5px solid var(--pt-border);
+  color: var(--pt-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(75, 22, 45, 0.08);
+  transition: background 0.15s, border-color 0.15s;
+}
+.pt-carousel-btn:hover:not(:disabled) {
+  background: var(--pt-sand-light);
+  border-color: var(--pt-accent);
+}
+.pt-carousel-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.pt-carousel-btn--prev { left: 0; }
+.pt-carousel-btn--next { right: 0; }
+
+@media (min-width: 768px) {
+  .pt-carousel-btn--prev { left: -20px; }
+  .pt-carousel-btn--next { right: -20px; }
+  .pt-carousel { padding-left: 28px; padding-right: 28px; }
+}
+
+/* Dots */
+.pt-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pt-border);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.pt-dot--active {
+  background: var(--pt-accent);
+  transform: scale(1.4);
 }
 
 /* ── Tablet ────────────────────────────────────────────────────────────── */

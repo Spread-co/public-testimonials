@@ -68,6 +68,22 @@ export default {
       hidden: true,
       defaultValue: '',
     },
+    carouselMode: {
+      label:        { en: 'Carousel Mode' },
+      type:         'OnOff',
+      defaultValue: false,
+    },
+    autoPlayInterval: {
+      label:        { en: 'Auto-play Interval (ms)' },
+      type:         'Number',
+      defaultValue: 5000,
+      options:      { min: 1000, max: 30000 },
+    },
+    carouselShowDots: {
+      label:        { en: 'Show Dot Indicators' },
+      type:         'OnOff',
+      defaultValue: true,
+    },
     /* wwEditor:start */
     bindingValidation: {
       limit:   { type: 'number', tooltip: 'Number of reviews to display (1-50)' },
