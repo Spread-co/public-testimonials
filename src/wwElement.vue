@@ -607,15 +607,15 @@ export default {
 :global(html.dark) .pt-root {
   --pt-bg:             #18181b;
   --pt-border:         rgba(230, 216, 202, 0.12);
-  --pt-text:           #f5f0eb;
+  --pt-text:           #e6d8ca;
   --pt-text-secondary: rgba(230, 216, 202, 0.6);
   --pt-sand-light:     #1f1218;
   background: #000000;
-  color: #f5f0eb;
+  color: #e6d8ca;
 }
 :global(html.dark) .pt-root__card { background: #18181b; border-color: rgba(230,216,202,0.12); box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
 :global(html.dark) .pt-root__quote { color: rgba(230,216,202,0.75); }
-:global(html.dark) .pt-root__name { color: #f5f0eb; }
+:global(html.dark) .pt-root__name { color: #e6d8ca; }
 :global(html.dark) .pt-root__role { color: rgba(230,216,202,0.5); }
 :global(html.dark) .pt-root__stars { color: #bead38; }
 :global(html.dark) .pt-root__avatar { background: #1f1218; color: rgba(230,216,202,0.6); }
